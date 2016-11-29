@@ -6,91 +6,114 @@ var url = 'mongodb://localhost:27017/store';
 
 // Create Routes for Prodocts
 
-app.get('/orders', function(req, res) {
+app.get('/orders', function (req, res) {
 
-    MongoClient.connect(url, function(err, db) {
+    MongoClient.connect(url, function (err, db) {
 
         var collection = db.collection('orders');
 
-        collection.find({}).toArray(function(err, data) {
-            
+        collection.find({}).toArray(function (err, data) {
+
             res.json(data);
             db.close();
         });
     });
 });
 
-app.get('/orders/:id', function(req, res) {
+app.get('/orders/:id', function (req, res) {
 
-    MongoClient.connect(url, function(err, db) {
+    MongoClient.connect(url, function (err, db) {
 
         var collection = db.collection('orders');
 
-        collection.findOne({'_id' : ObjectId(req.params.id)}, function(err, data) {
-            
+        collection.findOne({ '_id': ObjectId(req.params.id) }, function (err, data) {
+
             res.send(data);
             db.close();
         });
     });
 });
 
-app.post('/orders', function(req, res) {
+app.post('/orders', function (req, res) {
 
-    MongoClient.connect(url, function(err, db) {
+    MongoClient.connect(url, function (err, db) {
 
 
         // connect to users, and products collection
         var ordersCollection = db.collection('orders');
+        var productsCollection = db.collection('products');
+        var usersCollection = db.collection('users');
+
         // declare an orders object
+        var orderTotal = {};
 
         // search for a user with the objectid from req.body
+        usersCollection.findOne({ '_id': ObjectId(req.body.user) }, function (err, data) {
 
-        // add the user to the orders object
+            // add the user to the orders object
+            orderTotal.user = data;
 
-        // create the status and add it to the orders object
+            // create the status and add it to the orders object
+            orderTotal.status = {
+                flow: {
+                    description: "created",
+                    status: 1
+                },
+                payment: {
+                    description: "created",
+                    status: 1
+                }
+            }
+            // search for the product 
+            orderTotal.products = []
 
-        // search for the product 
+            req.body.products.forEach(function (element, index, array) {
 
-        // do a foreach on all products id from req.body.products
+                productsCollection.findOne({ '_id': ObjectId(element) }, function (err, result) {
+                    orderTotal.products.push(result);
 
-        // search for product in collection and add it to the orders object.
+                    if (index === array.length -1) {
+                        // write order object to collection order in mongodb
+                        ordersCollection.insert(orderTotal, function (err, data) {
+                            
+                            res.json({ 'msg': 'order created' });
+                            db.close();
+                        });
+                    }
+                });
+            })
 
-        // write order object to collection order in mongodb
 
-
-        collection.insert(req.body, function(err, data) {
-            
-            res.send({"msg" : "Product created"});
-            db.close();
         });
+
     });
 });
 
 // Update Route
-app.put('/orders/:id', function(req, res) {
+app.put('/orders/:id', function (req, res) {
 
-    MongoClient.connect(url, function(err, db) {
+    MongoClient.connect(url, function (err, db) {
 
         var collection = db.collection('orders');
 
-        collection.update({'_id' : ObjectId(req.params.id)}, {$set: req.body}, function(err, data) {
-            
-            res.send({"msg" : "order updated"});
+        collection.update({ '_id': ObjectId(req.params.id) }, { $set: req.body }, function (err, data) {
+
+            res.send({ "msg": "order updated" });
             db.close();
         });
     });
 });
 
 // delete Route
-app.delete('/orders/:id', function(req, res) {
+app.delete('/orders/:id', function (req, res) {
 
-    MongoClient.connect(url, function(err, db) {
+    MongoClient.connect(url, function (err, db) {
 
         var collection = db.collection('orders');
 
-        collection.remove({'_id' : ObjectId(req.params.id)}, function(err, data) {
-            
-            res.send({"msg" : "order deleted"});
+        collection.remove({ '_id': ObjectId(req.params.id) }, function (err, data) {
+
+            res.send({ "msg": "order deleted" });
             db.close();
         });
     });

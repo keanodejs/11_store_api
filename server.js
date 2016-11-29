@@ -13,4 +13,7 @@ app.use(users);
 var products = require('./routes/products.js');
 app.use(products);
 
+var orders = require('./routes/orders.js');
+app.use(orders);
+
 app.listen(3000);
