@@ -7,6 +7,19 @@ app.use(BodyParser.urlencoded({
 }));
 app.use(BodyParser.json());
 
+app.use(function(req, res, next){
+    console.log(req.headers.pass);
+
+    if(req.headers.pass === '1234'){
+        next();
+    }
+    else {
+        res.status(401);
+        res.json({'msg' : 'not allowed'});
+    }
+    
+});
+
 var users = require('./routes/users.js');
 app.use(users);
 
@@ -15,5 +28,12 @@ app.use(products);
 
 var orders = require('./routes/orders.js');
 app.use(orders);
+
+// MiddleWear
+
+app.use(function(req, res) {
+    res.status(404);
+    res.send({ 'msg': 'Page Not Found' });
+})
 
 app.listen(3000);

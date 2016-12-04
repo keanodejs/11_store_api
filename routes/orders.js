@@ -38,7 +38,9 @@ app.post('/orders', function (req, res) {
 
     MongoClient.connect(url, function (err, db) {
 
-
+        if(err){
+            res.status(500);
+        }
         // connect to users, and products collection
         var ordersCollection = db.collection('orders');
         var productsCollection = db.collection('products');
@@ -74,9 +76,10 @@ app.post('/orders', function (req, res) {
 
                     if (index === array.length -1) {
                         // write order object to collection order in mongodb
-                        ordersCollection.insert(orderTotal, function (err, data) {
-                            
-                            res.json({ 'msg': 'order created' });
+                        ordersCollection.insert(orderTotal, function (err, xxx) {
+                            res.status(201);
+                            res.location('/orders/' + xxx.insertedIds.toString());
+                            res.json(xxx);
                             db.close();
                         });
                     }
